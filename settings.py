@@ -1,0 +1,7 @@
+SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720 
+FPS = 60
+TITLE = "Create Performance Task"
+WAVE = 0
+MONSTERS = {}
+
+MAX_PROJECTILES = 10
