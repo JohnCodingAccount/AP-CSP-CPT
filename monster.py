@@ -70,7 +70,7 @@ class Zombie(Monster):
 
 class Boss(Monster):
     def __init__(self, posx, posy):
-        super().__init__(posx, posy, 0.5, 5, (0, 0, 0), 25, 21) 
+        super().__init__(posx, posy, 1.5, 5, (0, 0, 0), 50, 51) 
     def move(self, px, py):
         super().move(px, py)
     
@@ -78,4 +78,5 @@ class Boss(Monster):
         return super().knockback(px, py)
     
     def isAtPlayer(self, mp, pp, mr, pr):
+
         return super().isAtPlayer(mp, pp, mr, pr)
