@@ -4,4 +4,4 @@ TITLE = "Create Performance Task"
 WAVE = 0
 MONSTERS = {}
 
-MAX_PROJECTILES = 10
+MAX_PROJECTILES = 1000
