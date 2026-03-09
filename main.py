@@ -231,8 +231,8 @@ class Game:
                     if rt == 1:
                         monst = Spider(rx, 20) 
                     elif rt ==2:
-                        rant = random.randint(1,2)
-                        if rant == 1: 
+                        rant = random.randint(1,5)
+                        if rant == 1 or rant == 2 or rant == 3 or rant == 4: 
                             monst = Zombie(rx, 20)
                         else:
                             monst = Boss(rx, 20)
@@ -295,6 +295,7 @@ class Game:
 
 game = Game()
 game.run()
+
 
 
 
