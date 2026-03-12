@@ -3,7 +3,6 @@ import sys
 import random 
 from monster import *
 from settings import *
-import particlepy
 from player import *
 from projectiles import *
 
@@ -20,19 +19,17 @@ class Game:
         self.offsetx = -20 
         self.offsety = -20
         pygame.init()
-        self.particle_manager = particlepy.particlepy.particle.ParticleSystem()
         self.building = False
         self.MONSTERS = {}
-        self.particle_num = 10
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font("freesansbold.ttf", 32)
-        self.hp = 100
-        self.cost = 10
+        self.hp = 10000
+        self.cost = 1
         self.ts = self.font.render("Health: " + str(self.hp), True, (0,0,0))
         self.tr = self.ts.get_rect()
         self.tr.center = (100, 50)
-        self.gold = 1
+        self.gold = 100
         self.tg = self.font.render("Points: " + str(self.gold), True, (0,0,0))
         self.tgr = self.tg.get_rect()
         self.tgr.center = (100, 100)
@@ -54,7 +51,7 @@ class Game:
         self.towertemplate.set_alpha(100)
         pygame.mouse.set_cursor(pygame.cursors.diamond)
         pygame.display.set_caption(TITLE)
-        self.player = Player(self.screen.get_width() / 2, self.screen.get_height() / 2, 1, 10, 1, 10, "red", 10, 1, 8) 
+        self.player = Player(self.screen.get_width() / 2, self.screen.get_height() / 2, 1, 10, 1, 10, "red", 10, 0.1, 8) 
 
     
     def get_point_on_circle(self, h, k, radius):
@@ -68,7 +65,20 @@ class Game:
         self.ts = self.font.render("Health: " + str(self.hp), True, (0,0,0))
         self.tg = self.font.render("Points: " + str(self.gold), True, (0,0,0))
         self.tts = self.font.render("Wave: " + str(self.wave), True, (0,0,0))
+
     
+    def render(self):
+        for build in self.BUILDINGS:
+            if build.type == "Tower":
+                self.screen.blit(self.tower, build.position)
+            elif build.type == "Tent":
+                self.screen.blit(self.tent, build.position)
+        for projectile in self.PROJECTILES:
+            projectile.draw(self.screen)
+        for key in self.MONSTERS:
+            monster = self.MONSTERS[key]
+            pygame.draw.circle(self.screen, monster.color, pygame.Vector2(monster.position[0], monster.position[1]), monster.radius)
+
 
     def update(self):
         Knockback_time = 0.15
@@ -95,13 +105,13 @@ class Game:
                 if self.selection == 1:
                     if self.gold >= self.cost:
                         self.gold -= self.cost 
-                        build = Tower(pygame.mouse.get_pos(), 5, "Tower")
+                        build = Tower((pygame.mouse.get_pos()[0] + self.offsetx, pygame.mouse.get_pos()[1] + self.offsety), 5, "Tower")
                         self.BUILDINGS.append(build)
                         self.updateVisible()
                 elif self.selection == 2:
                     if self.gold >= self.cost:
                         self.gold -= self.cost
-                        build = Tent(pygame.mouse.get_pos(), 5, "Tent")
+                        build = Tent((pygame.mouse.get_pos()[0] + self.offsetx, pygame.mouse.get_pos()[1] + self.offsety), 5, "Tent")
                         self.BUILDINGS.append(build)
                         self.tg = self.font.render(str(self.gold), True, (0,0,0))
                 else: 
@@ -116,11 +126,9 @@ class Game:
         
         
         if self.building == False:
-            self.particle_manager.update(0.01, (-1, -1))
-            self.particle_manager.render(self.screen)
             for build in self.BUILDINGS:
                 if build.type == "Tower":
-                    self.screen.blit(self.tower, build.position)
+                    #self.screen.blit(self.tower, build.position)
                     if build.cooldown == False:
                         build.st = pygame.time.get_ticks()
                         tx, ty = build.getClosest(self.MONSTERS)
@@ -140,7 +148,7 @@ class Game:
                     if build.alive == False:
                         self.BUILDINGS.remove(build)
                 elif build.type == "Tent":
-                    self.screen.blit(self.tent, build.position)
+                    #self.screen.blit(self.tent, build.position)
                     if build.cooldown == False:
                         build.st = pygame.time.get_ticks()
                         self.hp += 1 
@@ -167,7 +175,7 @@ class Game:
         
             for projectile in self.PROJECTILES: 
                 projectile.update()
-                projectile.draw(self.screen)
+                #projectile.draw(self.screen)
         
             self.PROJECTILES = [p for p in self.PROJECTILES if p.alive]
 
@@ -195,7 +203,7 @@ class Game:
                         pass
                     else:
                         monster.move(self.player.getX(), self.player.getY())
-                pygame.draw.circle(self.screen, monster.color, pygame.Vector2(monster.position[0], monster.position[1]), monster.radius)
+                #pygame.draw.circle(self.screen, monster.color, pygame.Vector2(monster.position[0], monster.position[1]), monster.radius)
                 if monster.health <= 0:
                     dels.append(key)
                     break
@@ -217,10 +225,6 @@ class Game:
                     d = mv.distance_to(pv)
                     if d < (mr + pr):
                         self.PROJECTILES.remove(projectile)
-                        for i in range(self.particle_num):
-                            self.particle_manager.emit(particle=particlepy.particlepy.particle.Particle(particlepy.particlepy.shape.Circle(3.5, (0,0,250)), monster.position, (random.randint(1,360), 90), 0.05))
-                           
-                    
                         monster.isKnocked = True 
                         monster.isKnocked2 = True
                         monster.kt = pygame.time.get_ticks() 
@@ -309,6 +313,7 @@ class Game:
                 game.waveUp()
                 game.update()
                 self.updateVisible()
+                self.render()
                 pygame.display.update()
                 pygame.display.flip()
                 self.clock.tick(FPS)
