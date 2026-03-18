@@ -252,7 +252,7 @@ class Game:
         self.towertemplate.set_alpha(100)
         pygame.mouse.set_cursor(pygame.cursors.diamond)
         pygame.display.set_caption(TITLE)
-        self.player = Player(self.screen.get_width() / 2, self.screen.get_height() / 2, 1, 10, 1, 10, "red", 10, 1, 8) 
+        self.player = Player(self.screen.get_width() / 2, self.screen.get_height() / 2, 1, 10, 1, 10, "red", 10, 1.0, 8) 
 
         self.enemy_table = [
             (Spider, 30),   
