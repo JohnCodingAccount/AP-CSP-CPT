@@ -326,7 +326,7 @@ class Game:
                 self.MONSTERS[i] = EnemyClass(x, y)
 
     def updateVisible(self):
-        self.ts = self.font.render("Health: " + str(self.hp), True, (0,0,0))
+        self.ts = self.font.render("Health: " + str(round(self.hp,2), True, (0,0,0))
         self.tg = self.font.render("Points: " + str(self.gold), True, (0,0,0))
         self.tts = self.font.render("Wave: " + str(self.wave), True, (0,0,0))
 
