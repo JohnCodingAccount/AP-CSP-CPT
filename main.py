@@ -1,10 +1,15 @@
+#Configuring module imports
 import pygame
 import sys 
 import random 
 import math
 
+
+#Defining the projectile class used for every projectile shot by the player
 class Projectile():
+    #Setting values for projectile's position, target, and set values
     def __init__(self, x, y, target_x, target_y, speed=8, damage=10, size=5, color=(250,0,0)):
+        #Finding target position and using the math module in order to create a trajectory for itself
         dx = target_x - x
         dy = target_y - y
         dist = math.hypot(dx, dy)
@@ -14,6 +19,8 @@ class Projectile():
         except ZeroDivisionError:
             self.vy = 8
             self.vx = 8
+        
+        #Setting other information 
         self.x = x
         self.y = y
         self.radius = size 
@@ -21,19 +28,24 @@ class Projectile():
         self.alive = True
         self.color = color 
 
+    #Creating a function that moves and detects when the projectile goes out of range
     def update(self):
         self.x += self.vx
         self.y += self.vy
         if self.x < 0 or self.x > 1280 or self.y < 0 or self.y > 720:
             self.alive = False
 
+    #Renders the projectile
     def draw(self, surface):
         pygame.draw.circle(surface, (255, 80, 80), (int(self.x), int(self.y)), self.radius)
 
+    #Simple information return
     def get_damage(self):
         return self.damage
 
+#Creating the player class
 class Player():
+    #Defining various information for the player
     def __init__(self, posx, posy, atk, hp, defs, move, col, rad, cool, sped):
         self.position = (posx, posy)
         self.attack_power = atk 
@@ -45,6 +57,7 @@ class Player():
         self.cooldown = cool
         self.projectile_speed = sped
 
+    #Simple functions to quickly get player information 
     def getPos(self):
         return self.position
     
@@ -66,6 +79,7 @@ class Player():
     def getSpeed(self):
         return self.speed
     
+    #Simple functions to set player information
     def setPos(self, posx, posy):
         self.position = (posx, posy)
     
@@ -85,40 +99,10 @@ class Player():
         self.defense = defs 
 
     def setSpeed(self, speed):
-        self.speed = speed 
+        self.speed = speed  
 
-    def move(self, px, py):
-        while True:
-            sx = self.position[0]
-            sy = self.position[1]
-            sped = self.speed
-            if py > sy:
-                sy = sped
-            elif py < sy: 
-                sy = -sped
-            else:
-                sy = 0
-            if px > sx:
-                sx = sped
-            elif px < sx:
-                sx = -sped
-            else:
-                sx = 0
-            self.position = (self.position[0] + sx , self.position[1] + sy)
-            break 
 
-    def attack(self):
-        pass 
-
-    def draw(self):
-        pass
-
-    def takeDamage(self):
-        pass 
-
-    def detectDamage(self):
-        pass 
-
+#Creating the high monster class which takes in information and is rendered 
 class Monster:
     def __init__(self, posx, posy, speed, atk, col, rad, health=10):
         self.position = (posx,posy)
@@ -160,9 +144,10 @@ class Monster:
         d = mv.distance_to(pv)
         return d < (mr + pr)
 
+#Sub-classes of the Monster class with customized values
 class Spider(Monster):
-    def __init__(self, posx, posy):
-        super().__init__(posx, posy, 1, 0.1, (25, 25, 25), 7, 1) 
+    def __init__(self, posx, posy): 
+        super().__init__(posx, posy, 1, 0.1, (25, 25, 25), 7, 1) #<-- accessing the parent class and running the initializer.
 
 class Zombie(Monster):
     def __init__(self, posx, posy):
@@ -172,6 +157,7 @@ class Boss(Monster):
     def __init__(self, posx, posy):
         super().__init__(posx, posy, 0.5, 5, (0, 0, 0), 50, 31) 
 
+#Class for
 class Building:
     def __init__(self, pos, health, type):
         self.position = (pos[0], pos[1])
@@ -320,7 +306,7 @@ class Game:
             self.hp = self.max_hp
             self.updateVisible()
 
-            for i in range(self.wave):
+            for i in range(self.wave+1):
                 EnemyClass = self.choose_enemy()
                 x, y = self.random_spawn_edge()
                 self.MONSTERS[i] = EnemyClass(x, y)
@@ -494,4 +480,3 @@ class Game:
 
 game = Game()
 game.run()
-
