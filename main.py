@@ -147,17 +147,17 @@ class Monster:
 #Sub-classes of the Monster class with customized values
 class Spider(Monster):
     def __init__(self, posx, posy): 
-        super().__init__(posx, posy, 1, 0.1, (25, 25, 25), 7, 1) #<-- accessing the parent class and running the initializer.
+        super().__init__(posx, posy, 1, 0.05, (25, 25, 25), 7, 1) #<-- accessing the parent class and running the initializer.
 
 class Zombie(Monster):
     def __init__(self, posx, posy):
-        super().__init__(posx, posy, 0.5, 2, (100, 100, 100), 12, 6) 
+        super().__init__(posx, posy, 0.5, 1, (100, 100, 100), 12, 6) 
 
 class Boss(Monster):
     def __init__(self, posx, posy):
-        super().__init__(posx, posy, 0.5, 5, (0, 0, 0), 50, 31) 
+        super().__init__(posx, posy, 0.5, 2.5, (0, 0, 0), 50, 31) 
 
-#Class for
+#Class for the 'buildings' or the stationary support entities that assist the player
 class Building:
     def __init__(self, pos, health, type):
         self.position = (pos[0], pos[1])
@@ -166,7 +166,7 @@ class Building:
         self.cooldown = False
         self.st = 0 
         self.type = type
-
+    #Method that compares distances from buildings to every monster and finds the closest monster to the building
     def getClosest(self, mons):
         hd = 0
         hmonx = 0
@@ -181,6 +181,7 @@ class Building:
                 hmony = mons[mon].position[1]
         return hmonx, hmony
 
+#Sub-classes for the building classes, no changes in statistics here, but allows differeniation in the code later on .
 class Tower(Building):
     def __init__(self, pos, health, type):
         super().__init__(pos, health, type)
@@ -188,58 +189,75 @@ class Tower(Building):
 class Tent(Building):
     def __init__(self, pos, health, type):
         super().__init__(pos, health, type)
-    
-    def Heal(self):
-        pass
 
+#RGB color values for later use
 grey = (51, 51, 51)
 white = (250, 250, 250)
 
-MAX_PROJECTILES = 1000
+#Configuration variables on start 
+MAX_PROJECTILES = 1000 #<-- To prevent lag in the runtime 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720 
 FPS = 60
 TITLE = "Create Performance Task"
 WAVE = 0
 
+#Creating a class for the game itself in order to access and update frequently handled variables and keep track of entity interactions 
 class Game:
     def __init__(self):
+        #Setting up variables used by the game in order to render and track entities 
         self.offsetx = -20 
         self.offsety = -20
-        pygame.init()
-        self.building = False
-        self.MONSTERS = {}
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font("freesansbold.ttf", 32)
+        pygame.init() #Starting module 
+        self.building = False 
+        self.MONSTERS = {} #Main collection type for enemies 
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) #Creating window 
+        self.clock = pygame.time.Clock() #Creating module time keeping 
+        self.font = pygame.font.Font("freesansbold.ttf", 32) #Setting module font 
+        #Player variables, such as their health and how much it costs to make buildings 
         self.hp = 100
         self.max_hp = 100
         self.cost = 10
+
+        #Rendering text into the game 
         self.ts = self.font.render("Health: " + str(self.hp), True, (0,0,0))
         self.tr = self.ts.get_rect()
         self.tr.center = (100, 50)
+        self.bl = self.font.render("Q: ENTER/EXIT BUILD MODE", True, (0,0,0))
+        self.blr = self.bl.get_rect()
+        self.blr.center = (1025, 100)
+        #Setting the player points 
         self.gold = 1
         self.tg = self.font.render("Points: " + str(self.gold), True, (0,0,0))
         self.tgr = self.tg.get_rect()
         self.tgr.center = (100, 100)
+        #Setting wave number
         self.wave = WAVE
+        #Setting building selection 
         self.selection = 1 
+        self.running = True 
         self.tts = self.font.render("Wave: " + str(self.wave), True, (0,0,0))
         self.tir = self.tts.get_rect()
         self.tir.center = (1180, 50)
         self.stime = pygame.time.get_ticks()
         self.cooldown = False
+        #Collection types for other entities 
         self.PROJECTILES = []
         self.BUILDINGS = []
+        #Loading in images 
         self.tent = pygame.image.load("Tent.png")
         self.tower = pygame.image.load("Tower.png")
         self.towertemplate = pygame.image.load("Tower.png")
         self.tenttemplate = pygame.image.load("Tent.png")
+        #Making the template versions tranparent 
         self.tenttemplate.set_alpha(100)
         self.towertemplate.set_alpha(100)
+        #Setting new cursor 
         pygame.mouse.set_cursor(pygame.cursors.diamond)
         pygame.display.set_caption(TITLE)
+        #Creating player 
         self.player = Player(self.screen.get_width() / 2, self.screen.get_height() / 2, 1, 10, 1, 10, "red", 10, 1.0, 8) 
 
+        #Setting intial monster chance table 
         self.enemy_table = [
             (Spider, 30),   
             (Zombie, 70),   
@@ -248,7 +266,7 @@ class Game:
 
     
 
-
+    #Creating function that chooses random enemy from table 
     def choose_enemy(self):
         total = sum(weight for enemy, weight in self.enemy_table)
         r = random.uniform(0, total)
@@ -258,6 +276,7 @@ class Game:
                 return enemy
             upto += weight
 
+    #Picking random edge of the screen for the enemies to spawn from 
     def random_spawn_edge(self):
         side = random.randint(1, 4)
         if side == 1:  
@@ -269,13 +288,14 @@ class Game:
         if side == 4:  
             return SCREEN_WIDTH, random.randint(0, SCREEN_HEIGHT)
 
+    #Moves player to next wave, rewards them, and updates monster table 
     def waveUp(self):
         if len(self.MONSTERS) <= 0:
 
         
 
             
-            
+            #Predefining waves by increaments of fives up to wave 50
             if self.wave > 5:
                 self.enemy_table = [(Spider, 35), (Zombie, 60), (Boss, 5)]
             if self.wave > 10:
@@ -296,26 +316,32 @@ class Game:
                 self.enemy_table = [(Spider, 0), (Zombie, 60), (Boss, 40)]
             if self.wave > 50:
                 self.enemy_table = [(Spider, 30), (Zombie, 60), (Boss, 10)]
-
+            
+            #Increasing point amount, wave amount, hp, and max hp amount 
             self.gold += self.wave
             self.wave += 1
             if self.wave % 2 == 0:
                 self.max_hp += 10
                 self.player.cooldown - 0.02
 
+            #Fully top up health and update adjusted values 
             self.hp = self.max_hp
             self.updateVisible()
 
+            #Spawning in new enemies 
             for i in range(self.wave+1):
                 EnemyClass = self.choose_enemy()
                 x, y = self.random_spawn_edge()
                 self.MONSTERS[i] = EnemyClass(x, y)
 
+    #Updating changed values 
     def updateVisible(self):
         self.ts = self.font.render("Health: " + str(round(self.hp,2)), True, (0,0,0))
         self.tg = self.font.render("Points: " + str(self.gold), True, (0,0,0))
         self.tts = self.font.render("Wave: " + str(self.wave), True, (0,0,0))
+        self.bl = self.font.render("Q: ENTER/EXIT BUILD MODE", True, (0,0,0))
 
+    #Rendering in the graphics of each entity, but not their interactions
     def render(self):
         for build in self.BUILDINGS:
             if build.type == "Tower":
@@ -328,21 +354,25 @@ class Game:
             monster = self.MONSTERS[key]
             pygame.draw.circle(self.screen, monster.color, pygame.Vector2(monster.position[0], monster.position[1]), monster.radius)
 
+    #Going through each entity in the collection types, and handling their backend interactions
     def update(self):
         Knockback_time = 0.15
         Stun_time = 0.3
         ctime = pygame.time.get_ticks()
 
+        #Handling projectile cooldown 
         if abs(self.stime - ctime)/1000 > self.player.cooldown: 
             self.stime = ctime 
             self.cooldown = False
 
+        #Handling building mode templates 
         if self.building == True:
             if self.selection == 1:
                 self.screen.blit(self.towertemplate, (pygame.mouse.get_pos()[0] + self.offsetx, pygame.mouse.get_pos()[1] + self.offsety))
             elif self.selection == 2:
                 self.screen.blit(self.tenttemplate, (pygame.mouse.get_pos()[0] + self.offsetx, pygame.mouse.get_pos()[1] + self.offsety))
 
+        #Handling projectile and building creation
         mouser = pygame.mouse.get_pressed()
         if mouser[0]:
             if self.building:
@@ -361,9 +391,12 @@ class Game:
                     mx, my = pygame.mouse.get_pos()
                     self.PROJECTILES.append(Projectile(self.player.position[0], self.player.position[1], mx, my, self.player.projectile_speed))
                     self.cooldown = True
+        
+        #Main update loop, does not activate when player is building 
         if self.building:
             pass 
         else:
+            #Handling building interactions such as tower shots, tent heals, and damage taken 
             for build in self.BUILDINGS[:]:
                 if build.type == "Tower":
                     if not build.cooldown:
@@ -399,12 +432,14 @@ class Game:
                     if build.health <= 0:
                         self.BUILDINGS.remove(build)
 
+            #Handling projectile movement and max cap of projectiles 
             for projectile in self.PROJECTILES: 
                 projectile.update()
             self.PROJECTILES = [p for p in self.PROJECTILES if p.alive]
             if len(self.PROJECTILES) > MAX_PROJECTILES:
                 self.PROJECTILES.pop(0)
             dels = []
+            #Handling monster movement, knockback, damage to player, and destruction while colliding with projectiles.
             for key, monster in list(self.MONSTERS.items()):
                 if monster.kt is not None:
                     if abs(monster.kt - pygame.time.get_ticks())/1000 > Knockback_time:
@@ -437,17 +472,20 @@ class Game:
                         monster.health -= (projectile.damage / 2)
                         self.waveUp()
 
+            #Handling enemy deletion, it gives an error when we delete while iterating through them 
             for i in dels:
                 self.MONSTERS.pop(i, None)
 
+    #Main game loop 
     def run(self): 
-        running = True
-        while running:
+        while self.running:
+            #Handling pygame evenets 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                     pygame.quit()
                     sys.exit()
+                #Handling building mode, and building selection
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q:
                         self.building = not self.building
@@ -456,8 +494,10 @@ class Game:
                     elif event.key == pygame.K_2:
                         self.selection = 2
 
+            #Checking for player defeat
             if self.hp <= 0:
                 while True:
+                    #Updating game if player is alive
                     self.screen.fill((0,0,0))
                     font2 = pygame.font.Font("freesansbold.ttf", 89)
                     ts2 = font2.render("Game Over", True, (250, 250, 250))
@@ -465,10 +505,12 @@ class Game:
                     tr.center = (self.screen.get_width()//2, self.screen.get_height()//2)
                     self.screen.blit(ts2, tr)
                     pygame.display.update()
+            #Going to game end screen when player is defeated
             else:
                 self.screen.fill(white)
                 self.screen.blit(self.ts, self.tr)
                 self.screen.blit(self.tts, self.tir)
+                self.screen.blit(self.bl, self.blr)
                 self.screen.blit(self.tg, self.tgr)
                 pygame.draw.circle(self.screen, self.player.color, pygame.Vector2(self.player.getX(), self.player.getY()), self.player.radius)
                 self.waveUp()
@@ -478,5 +520,7 @@ class Game:
                 pygame.display.update()
                 self.clock.tick(FPS)
 
+
+#Creating a new game and running it
 game = Game()
 game.run()
